@@ -281,9 +281,10 @@
             .then((response) =>
               response.ok ? response.json() : Promise.reject()
             )
-            .then(() =>
-              displayNotification("Record created successfully!", "success")
-            )
+            .then(() => {
+              displayNotification("Record created successfully!", "success");
+              hideLoader();
+            })
             .catch(() => {
               hideLoader(); // Hide loader on error
               displayNotification("Error creating record.", "error");
