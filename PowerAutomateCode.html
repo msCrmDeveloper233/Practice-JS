@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="icon" href="data:," />
+    <title>Create New Contact Record</title>
+    <style>
+      #loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 6px solid #ddd;
+        border-top: 6px solid #007bff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9fc;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      .form-container {
+        background: #ffffff;
+        padding: 25px 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 600px;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 24px;
+        margin-bottom: 20px;
+        color: #444;
+      }
+
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #666;
+      }
+
+      input[type="text"],
+      input[type="email"] {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+        color: #333;
+        box-sizing: border-box;
+      }
+
+      input[type="text"]:focus,
+      input[type="email"]:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
+        outline: none;
+      }
+
+      .button-group {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .button-group button {
+        flex: 1;
+        padding: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      .button-group button:hover {
+        background-color: #0056b3;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 13px;
+        color: #999;
+      }
+
+      .footer a {
+        color: #007bff;
+        text-decoration: none;
+      }
+
+      .footer a:hover {
+        text-decoration: underline;
+      }
+
+      #notification {
+        display: none;
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        font-size: 14px;
+        text-align: center;
+      }
+
+      .success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #333;
+      }
+
+      table th,
+      table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+
+      table th {
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+      }
+
+      table tr:nth-child(even) {
+        background-color: #f9f9fc;
+      }
+
+      table tr:hover {
+        background-color: #f1f1f1;
+      }
+
+      #contactList {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loader" style="display: none">
+      <div class="spinner"></div>
+    </div>
+
+    <div class="form-container">
+      <h1>Create New Contact Record</h1>
+
+      <!-- Notification Bar -->
+      <div id="notification"></div>
+
+      <form id="recordForm">
+        <label for="firstname">First Name:</label>
+        <input
+          type="text"
+          id="firstname"
+          name="firstname"
+          placeholder="Enter first name"
+          required
+        />
+
+        <label for="lastname">Last Name:</label>
+        <input
+          type="text"
+          id="lastname"
+          name="lastname"
+          placeholder="Enter last name"
+          required
+        />
+
+        <label for="emailaddress1">Email:</label>
+        <input
+          type="email"
+          id="emailaddress1"
+          name="emailaddress1"
+          placeholder="Enter email"
+          required
+        />
+
+        <div class="button-group">
+          <button type="button" id="submitButton">Submit</button>
+          <button type="button" id="showContactsButton">Show Contacts</button>
+        </div>
+      </form>
+
+      <!-- Contact List -->
+      <div id="contactList"></div>
+
+      <div class="footer">
+        Powered by
+        <a href="https://powerautomate.microsoft.com" target="_blank"
+          >Power Automate</a
+        >
+      </div>
+    </div>
+
+    <script>
+      function showLoader() {
+        document.getElementById("loader").style.display = "flex";
+      }
+
+      function hideLoader() {
+        document.getElementById("loader").style.display = "none";
+      }
+
+      // Submit contact
+      document
+        .getElementById("submitButton")
+        .addEventListener("click", function (e) {
+          e.preventDefault();
+          showLoader();
+
+          const firstname = document.getElementById("firstname").value;
+          const lastname = document.getElementById("lastname").value;
+          const emailaddress1 = document.getElementById("emailaddress1").value;
+
+          if (!firstname || !lastname || !emailaddress1) {
+            displayNotification(
+              "Please fill out all fields before submitting.",
+              "error"
+            );
+            return;
+          }
+
+          const data = { firstname, lastname, emailaddress1 };
+
+          fetch(
+            "https://prod-142.westus.logic.azure.com:443/workflows/cc647a96a25f46bc97c513541fba1add/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=stGXUTcx_sBZQWJjC6yce0iyO2ntuCqEeCVElCxKrps",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            }
+          )
+            .then((response) =>
+              response.ok ? response.json() : Promise.reject()
+            )
+            .then(() =>
+              displayNotification("Record created successfully!", "success")
+            )
+            .catch(() => {
+              hideLoader(); // Hide loader on error
+              displayNotification("Error creating record.", "error");
+            });
+        });
+
+      // Fetch and display contacts
+      document
+        .getElementById("showContactsButton")
+        .addEventListener("click", function () {
+          showLoader(); // Show loader before fetching contacts
+          fetch(
+            "https://prod-183.westus.logic.azure.com:443/workflows/86e80cbf164b4989adb49f20ee5fa14a/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=1df4bA0sthLL_NrZMTeNNlw7WHMBBfP3g3HMa-VggRM",
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+            }
+          )
+            .then((response) =>
+              response.ok ? response.json() : Promise.reject()
+            )
+            .then((data) => {
+              const contacts = data.contacts?.value || [];
+              const contactList = document.getElementById("contactList");
+
+              if (contacts.length > 0) {
+                let tableHTML = `
+                <h2>Contact List:</h2>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>First Name</th>
+                      <th>Last Name</th>
+                      <th>Email</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+              `;
+                contacts.forEach(
+                  ({
+                    firstname = "N/A",
+                    lastname = "N/A",
+                    emailaddress1 = "N/A",
+                  }) => {
+                    tableHTML += `
+                  <tr>
+                    <td>${firstname}</td>
+                    <td>${lastname}</td>
+                    <td>${emailaddress1}</td>
+                  </tr>
+                `;
+                  }
+                );
+                tableHTML += `</tbody></table>`;
+                contactList.innerHTML = tableHTML;
+              } else {
+                contactList.innerHTML = "<p>No contacts found.</p>";
+              }
+            })
+            .catch(() => {
+              hideLoader(); // Hide loader on error
+              displayNotification("Error fetching contacts.", "error");
+            });
+        });
+
+      // Display notification
+      function displayNotification(message, type) {
+        const notification = document.getElementById("notification");
+        notification.className = type;
+        notification.textContent = message;
+        notification.style.display = "block";
+        setTimeout(() => {
+          notification.style.display = "none";
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>
