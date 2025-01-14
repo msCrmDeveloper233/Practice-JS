@@ -260,6 +260,7 @@
           const emailaddress1 = document.getElementById("emailaddress1").value;
 
           if (!firstname || !lastname || !emailaddress1) {
+            hideLoader(); // Hide loader on error
             displayNotification(
               "Please fill out all fields before submitting.",
               "error"
@@ -301,9 +302,10 @@
               headers: { "Content-Type": "application/json" },
             }
           )
-            .then((response) =>
-              response.ok ? response.json() : Promise.reject()
-            )
+            .then((response) => {
+              hideLoader(); // Hide loader after fetching contacts
+              return response.ok ? response.json() : Promise.reject();
+            })
             .then((data) => {
               const contacts = data.contacts?.value || [];
               const contactList = document.getElementById("contactList");
